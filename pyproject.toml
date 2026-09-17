@@ -1,0 +1,22 @@
+[project]
+name = "chatqt"
+version = "0.1.0"
+description = "PySide6 desktop client for OpenAI-compatible chat APIs"
+requires-python = ">=3.10"
+dependencies = [
+    "PySide6>=6.7,<7",
+    "Markdown>=3.5,<4",
+    "Pygments>=2.17,<3",
+    "requests>=2.31,<3",
+]
+
+[project.scripts]
+chatqt = "chatqt.app:main"
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+ignore = ["E501"]
