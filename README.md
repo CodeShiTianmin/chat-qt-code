@@ -32,6 +32,18 @@ Linux 无显示环境下的冒烟测试（会真实请求接口）：
 CHATQT_API_KEY=sk-... xvfb-run -a python scripts/smoke.py
 ```
 
+## 下载 / 打包 exe
+
+- **直接下载**：每次推送到 `main` 后，GitHub Actions 的 [Build](../../actions/workflows/build.yml) 工作流会在 Artifacts 里产出 `ChatQT-windows-x64`（单文件 exe，免安装）。推送 `v*` 标签（如 `git tag v0.1.0 && git push origin v0.1.0`）会自动创建 Release 并附上 exe。
+- **本地打包**：
+
+  ```bash
+  pip install pyinstaller
+  pyinstaller --noconfirm --clean chatqt.spec    # 产物在 dist/ChatQT.exe（Linux/macOS 为 dist/ChatQT）
+  ```
+
+  图标由 `scripts/make_icon.py` 生成到 `chatqt/assets/icon.{png,ico}`。exe 未做代码签名，Windows SmartScreen 首次运行可能提示「更多信息 → 仍要运行」。
+
 ## 快捷键
 
 | 快捷键 | 作用 |
@@ -68,4 +80,7 @@ chatqt/
   dialogs.py          接口设置、数据文件夹对话框
   main_window.py      主窗口与交互逻辑
 scripts/smoke.py      端到端冒烟测试（Xvfb）
+scripts/make_icon.py  生成应用图标
+chatqt.spec           PyInstaller 打包配置
+.github/workflows/build.yml  Lint + Windows exe 构建 / 发布
 ```

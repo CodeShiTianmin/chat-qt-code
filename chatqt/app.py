@@ -6,14 +6,15 @@ import sys
 from pathlib import Path
 
 from PySide6.QtCore import QCoreApplication, Qt, QTimer
-from PySide6.QtGui import QColor, QFont, QFontDatabase, QPalette
+from PySide6.QtGui import QColor, QFont, QFontDatabase, QIcon, QPalette
 from PySide6.QtWidgets import QApplication
 
 from . import __version__, icons, theme
 from .config import APP_NAME, Settings
 from .main_window import MainWindow
 
-FONT_DIR = Path(__file__).parent / "assets" / "fonts"
+ASSET_DIR = Path(__file__).parent / "assets"
+FONT_DIR = ASSET_DIR / "fonts"
 
 
 def _load_fonts() -> None:
@@ -63,6 +64,7 @@ def main(argv: list[str] | None = None) -> int:
     QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
     app = QApplication(argv if argv is not None else sys.argv)
     app.setStyle("Fusion")
+    app.setWindowIcon(QIcon(str(ASSET_DIR / "icon.png")))
     _load_fonts()
     app.setFont(_app_font())
     app.setPalette(_palette())

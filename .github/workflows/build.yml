@@ -1,0 +1,67 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt ruff
+      - run: ruff check chatqt scripts main.py
+      - run: ruff format --check chatqt scripts main.py
+      - run: python -m compileall -q chatqt scripts main.py
+
+  windows-exe:
+    needs: lint
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt pyinstaller
+      - name: Build ChatQT.exe
+        run: pyinstaller --noconfirm --clean chatqt.spec
+      - name: Smoke-run the exe (imports, Qt init)
+        shell: pwsh
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          $p = Start-Process -FilePath dist\ChatQT.exe -PassThru
+          Start-Sleep -Seconds 10
+          if ($p.HasExited) { Write-Error "ChatQT.exe exited early with code $($p.ExitCode)"; exit 1 }
+          Stop-Process -Id $p.Id -Force
+      - name: Version label
+        id: ver
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then echo "label=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT";
+          else echo "label=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"; fi
+      - name: Rename artifact
+        shell: bash
+        run: mv dist/ChatQT.exe "dist/ChatQT-${{ steps.ver.outputs.label }}-windows-x64.exe"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ChatQT-windows-x64
+          path: dist/ChatQT-*.exe
+          if-no-files-found: error
+      - name: Release (on tag)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/ChatQT-*.exe
+          generate_release_notes: true
